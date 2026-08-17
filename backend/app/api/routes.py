@@ -14,6 +14,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.models.exam_session import ExamSession
+from app.models.student import Student
 from app.services.agent import run_agent
 from app.services.ingestion import ingest_evidence
 
@@ -49,6 +51,48 @@ class InvestigationRequest(BaseModel):
 
 class InvestigationResponse(BaseModel):
     answer: str
+
+
+@router.get("/students")
+def get_students(
+    db: Session = Depends(get_db),
+):
+    students = (
+        db.query(Student)
+        .order_by(Student.id)
+        .all()
+    )
+
+    return [
+        {
+            "id": student.id,
+            "student_id": student.student_id,
+            "name": student.name,
+        }
+        for student in students
+    ]
+
+
+@router.get("/sessions")
+def get_sessions(
+    db: Session = Depends(get_db),
+):
+    sessions = (
+        db.query(ExamSession)
+        .order_by(ExamSession.id)
+        .all()
+    )
+
+    return [
+        {
+            "id": session.id,
+            "student_id": session.student_id,
+            "exam_name": session.exam_name,
+            "started_at": session.started_at,
+            "ended_at": session.ended_at,
+        }
+        for session in sessions
+    ]
 
 
 @router.post(
