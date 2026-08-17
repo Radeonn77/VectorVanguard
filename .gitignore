@@ -57,3 +57,11 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
+
+# =========================
+# ChromaDB persistent storage
+# =========================
+backend/storage/*
+!backend/storage/chroma/
+backend/storage/chroma/*
+!backend/storage/chroma/.gitkeep
