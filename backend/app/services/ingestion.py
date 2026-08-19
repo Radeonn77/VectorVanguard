@@ -1,4 +1,5 @@
 import base64
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -61,7 +62,9 @@ def extract_ocr(image_path: str) -> str:
     return text.strip()
 
 
-def analyze_image(image_path: str) -> str:
+def analyze_image(
+    image_path: str,
+) -> tuple[str, dict]:
     image_path = Path(image_path)
 
     suffix = image_path.suffix.lower()
@@ -83,30 +86,77 @@ def analyze_image(image_path: str) -> str:
             image_file.read()
         ).decode("utf-8")
 
+    prompt = """
+Analyze this exam evidence image for academic
+integrity investigation.
+
+Return ONLY valid JSON.
+Do not use markdown code fences.
+Do not add explanations outside the JSON.
+
+Use exactly this structure:
+
+{
+  "student": "",
+  "seat_number": "",
+  "objects": [
+    {
+      "name": "",
+      "visible": true,
+      "location": "",
+      "notes": ""
+    }
+  ],
+  "electronic_devices": [
+    {
+      "name": "",
+      "visible": true,
+      "location": "",
+      "notes": ""
+    }
+  ],
+  "environment": ""
+}
+
+Rules:
+
+1. Report only objects that are actually visible.
+
+2. Pay special attention to objects on or near
+   the primary student's desk.
+
+3. Carefully check for:
+   mobile phones, smartphones, tablets, laptops,
+   smartwatches, earphones, calculators, books,
+   notebooks, notes, papers, pens, pencils,
+   water bottles and other electronic devices.
+
+4. For every visible object, describe its
+   approximate location.
+
+5. If an object is uncertain or partially obscured,
+   clearly mention that uncertainty in "notes".
+
+6. Do not invent objects.
+
+7. Do not claim an object is absent simply because
+   it is small or partially obscured.
+
+8. Identify the student's seat number if it is visible.
+
+9. Distinguish the primary student's desk from
+   objects belonging to other students whenever
+   possible.
+
+10. Focus on what can actually be observed in
+    the image rather than making assumptions.
+"""
+
     message = HumanMessage(
         content=[
             {
                 "type": "text",
-                "text": (
-                    "Analyze this exam evidence image carefully for "
-                    "academic integrity and proctoring purposes.\n\n"
-
-                    "Identify every clearly visible object on or near "
-                    "the student's desk, including mobile phones, "
-                    "smartphones, tablets, laptops, smartwatches, "
-                    "earphones, calculators, papers, books, notes, "
-                    "pens, pencils, water bottles, and other devices.\n\n"
-
-                    "For electronic devices, describe their approximate "
-                    "location relative to the student or desk.\n\n"
-
-                    "Also describe the student, exam papers, seat number, "
-                    "and relevant surroundings.\n\n"
-
-                    "Only report objects that are actually visible. "
-                    "Do not assume an object is absent simply because "
-                    "it is small or partially visible."
-                ),
+                "text": prompt,
             },
             {
                 "type": "image_url",
@@ -117,9 +167,43 @@ def analyze_image(image_path: str) -> str:
         ],
     )
 
-    response = vision_llm.invoke([message])
+    response = vision_llm.invoke(
+        [message]
+    )
 
-    return str(response.content).strip()
+    raw_output = str(
+        response.content
+    ).strip()
+
+    # Remove markdown fences if the model
+    # accidentally returns them.
+    if raw_output.startswith("```"):
+        raw_output = (
+            raw_output
+            .replace("```json", "")
+            .replace("```", "")
+            .strip()
+        )
+
+    try:
+        structured_data = json.loads(
+            raw_output
+        )
+
+    except json.JSONDecodeError:
+        structured_data = {
+            "student": "",
+            "seat_number": "",
+            "objects": [],
+            "electronic_devices": [],
+            "environment": "",
+            "raw_output": raw_output,
+        }
+
+    return (
+        raw_output,
+        structured_data,
+    )
 
 
 def ingest_evidence(
@@ -132,15 +216,11 @@ def ingest_evidence(
         image_path
     )
 
-    vision_description = analyze_image(
+    (
+        vision_description,
+        structured_observations,
+    ) = analyze_image(
         image_path
-    )
-
-    combined_text = (
-        f"OCR:\n"
-        f"{ocr_text}\n\n"
-        f"VISION:\n"
-        f"{vision_description}"
     )
 
     try:
@@ -149,8 +229,14 @@ def ingest_evidence(
             evidence_id=evidence_id,
             session_id=session_id,
             image_path=image_path,
-            ocr_text=combined_text,
-            timestamp=datetime.now(timezone.utc),
+            ocr_text=ocr_text,
+            vision_description=vision_description,
+            structured_observations=(
+                structured_observations
+            ),
+            timestamp=datetime.now(
+                timezone.utc
+            ),
         )
 
         return evidence

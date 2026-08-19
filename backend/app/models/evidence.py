@@ -1,6 +1,13 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -10,10 +17,15 @@ class EvidenceRecord(Base):
     __tablename__ = "evidence_records"
 
     __table_args__ = (
-        UniqueConstraint("evidence_id", name="uq_evidence_id"),
+        UniqueConstraint(
+            "evidence_id",
+            name="uq_evidence_id",
+        ),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True
+    )
 
     evidence_id: Mapped[str] = mapped_column(
         String(50),
@@ -32,8 +44,21 @@ class EvidenceRecord(Base):
         nullable=False,
     )
 
+    # Raw OCR output
     ocr_text: Mapped[str | None] = mapped_column(
         Text,
+        nullable=True,
+    )
+
+    # Full vision-model response
+    vision_description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    # Structured information extracted by vision model
+    structured_observations: Mapped[dict | None] = mapped_column(
+        JSONB,
         nullable=True,
     )
 

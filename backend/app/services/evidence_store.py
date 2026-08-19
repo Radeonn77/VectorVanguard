@@ -12,17 +12,20 @@ def store_evidence(
     session_id: int,
     image_path: str,
     ocr_text: str,
+    vision_description: str | None = None,
+    structured_observations: dict | None = None,
     timestamp: datetime | None = None,
 ):
     if timestamp is None:
         timestamp = datetime.now(timezone.utc)
 
-    # PostgreSQL
     evidence = EvidenceRecord(
         evidence_id=evidence_id,
         session_id=session_id,
         image_path=image_path,
         ocr_text=ocr_text,
+        vision_description=vision_description,
+        structured_observations=structured_observations,
         timestamp=timestamp,
     )
 
@@ -30,10 +33,24 @@ def store_evidence(
     db.commit()
     db.refresh(evidence)
 
-    # ChromaDB
+    # Build searchable text for ChromaDB.
+    structured_text = ""
+
+    if structured_observations:
+        structured_text = (
+            "\n\nSTRUCTURED OBSERVATIONS:\n"
+            f"{structured_observations}"
+        )
+
+    vector_text = (
+        f"OCR:\n{ocr_text}\n\n"
+        f"VISION:\n{vision_description or ''}"
+        f"{structured_text}"
+    )
+
     collection.add(
         ids=[evidence_id],
-        documents=[ocr_text],
+        documents=[vector_text],
         metadatas=[
             {
                 "evidence_id": evidence_id,
