@@ -88,19 +88,24 @@ def analyze_image(image_path: str) -> str:
             {
                 "type": "text",
                 "text": (
-                    "Analyze this exam evidence image carefully for academic integrity "
-                    "and proctoring purposes.\n\n"
-                    "Identify every clearly visible object on or near the student's desk, "
-                    "including mobile phones, smartphones, tablets, laptops, smartwatches, "
-                    "earphones, calculators, papers, books, notes, pens, pencils, water "
-                    "bottles, and other electronic devices.\n\n"
-                    "For electronic devices, describe their approximate location relative "
-                    "to the student or desk.\n\n"
-                    "Also describe the student, exam papers, seat number, and relevant "
-                    "surroundings.\n\n"
-                    "Only report objects that are actually visible. Do not guess or "
-                    "assume details that cannot be seen. Pay special attention to small "
-                    "or partially visible objects on or near the student's desk."
+                    "Analyze this exam evidence image carefully for "
+                    "academic integrity and proctoring purposes.\n\n"
+
+                    "Identify every clearly visible object on or near "
+                    "the student's desk, including mobile phones, "
+                    "smartphones, tablets, laptops, smartwatches, "
+                    "earphones, calculators, papers, books, notes, "
+                    "pens, pencils, water bottles, and other devices.\n\n"
+
+                    "For electronic devices, describe their approximate "
+                    "location relative to the student or desk.\n\n"
+
+                    "Also describe the student, exam papers, seat number, "
+                    "and relevant surroundings.\n\n"
+
+                    "Only report objects that are actually visible. "
+                    "Do not assume an object is absent simply because "
+                    "it is small or partially visible."
                 ),
             },
             {

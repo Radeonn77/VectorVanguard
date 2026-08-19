@@ -39,7 +39,7 @@ function App() {
   }, [])
 
   const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0])
+    setSelectedFile(event.target.files[0] || null)
     setUploadResult('')
     setUploadError('')
   }
@@ -61,15 +61,8 @@ function App() {
 
     const formData = new FormData()
 
-    formData.append(
-      'session_id',
-      selectedSession
-    )
-
-    formData.append(
-      'file',
-      selectedFile
-    )
+    formData.append('session_id', selectedSession)
+    formData.append('file', selectedFile)
 
     try {
       const response = await fetch(
@@ -148,39 +141,74 @@ function App() {
 
   return (
     <div className="app">
+
+      {/* Header */}
+
       <header className="header">
-        <div>
-          <h1>VectorVanguard</h1>
-          <p>Offline AI Evidence Investigation System</p>
+
+        <div className="brand">
+          <div className="brand-icon">
+            VV
+          </div>
+
+          <div>
+            <h1>VectorVanguard</h1>
+
+            <p>
+              Offline AI Evidence Investigation System
+            </p>
+          </div>
         </div>
 
         <div className="status">
           <span className="status-dot"></span>
           Local AI System
         </div>
+
       </header>
+
+
+      {/* Main */}
 
       <main className="dashboard">
 
         <section className="welcome">
-          <h2>Evidence Investigation</h2>
 
-          <p>
-            Upload exam evidence and investigate it using
-            the local AI pipeline.
-          </p>
+          <div>
+            <span className="eyebrow">
+              OFFLINE INTELLIGENCE
+            </span>
+
+            <h2>
+              Evidence Investigation
+            </h2>
+
+            <p>
+              Upload exam evidence and investigate it
+              using the local AI pipeline.
+            </p>
+          </div>
+
         </section>
+
 
         <section className="cards">
 
           {/* Evidence Upload */}
 
           <div className="card">
-            <h3>Evidence Upload</h3>
 
-            <p>
+            <div className="card-icon">
+              ↑
+            </div>
+
+            <h3>
+              Evidence Upload
+            </h3>
+
+            <p className="card-description">
               Upload CCTV snapshots or exam-environment
-              images for local processing.
+              images for local AI processing.
             </p>
 
             <label>
@@ -209,11 +237,26 @@ function App() {
               ))}
             </select>
 
+
+            <label>
+              Evidence Image
+            </label>
+
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={handleFileChange}
             />
+
+            {selectedFile && (
+              <div className="file-preview">
+                <span>Selected:</span>
+                <strong>
+                  {selectedFile.name}
+                </strong>
+              </div>
+            )}
+
 
             <button
               onClick={handleUpload}
@@ -224,29 +267,42 @@ function App() {
                 : 'Upload Evidence'}
             </button>
 
+
             {uploadResult && (
-              <p>
-                {uploadResult}
-              </p>
+              <div className="success-message">
+                ✓ {uploadResult}
+              </div>
             )}
 
             {uploadError && (
-              <p>
+              <div className="error-message">
                 Error: {uploadError}
-              </p>
+              </div>
             )}
+
           </div>
 
 
           {/* Investigation */}
 
-          <div className="card">
-            <h3>Investigation</h3>
+          <div className="card investigation-card">
 
-            <p>
-              Ask questions about processed evidence using
-              the local RAG system.
+            <div className="card-icon">
+              ?
+            </div>
+
+            <h3>
+              Investigation
+            </h3>
+
+            <p className="card-description">
+              Ask questions about processed evidence
+              using the local RAG system.
             </p>
+
+            <label>
+              Investigation Question
+            </label>
 
             <textarea
               value={query}
@@ -257,6 +313,7 @@ function App() {
               rows="4"
             />
 
+
             <button
               onClick={handleInvestigation}
               disabled={investigating}
@@ -266,73 +323,130 @@ function App() {
                 : 'Investigate Evidence'}
             </button>
 
+
             {investigationResult && (
               <div className="result">
-                <strong>AI Answer</strong>
 
-                <p>
+                <div className="result-header">
+
+                  <div>
+                    <span className="result-label">
+                      INVESTIGATION RESULT
+                    </span>
+
+                    <strong>
+                      AI Answer
+                    </strong>
+                  </div>
+
+                  <span className="result-status">
+                    Evidence Grounded
+                  </span>
+
+                </div>
+
+                <div className="result-answer">
                   {investigationResult}
-                </p>
+                </div>
+
               </div>
             )}
 
+
             {investigationError && (
-              <p>
+              <div className="error-message">
                 Error: {investigationError}
-              </p>
+              </div>
             )}
+
           </div>
 
 
           {/* Exam Sessions */}
 
           <div className="card">
-            <h3>Exam Sessions</h3>
 
-            <p>
-              Sessions currently available in PostgreSQL:
+            <div className="card-icon">
+              ◉
+            </div>
+
+            <h3>
+              Exam Sessions
+            </h3>
+
+            <p className="card-description">
+              Sessions currently available in PostgreSQL.
             </p>
 
+
             {loading && (
-              <p>Loading sessions...</p>
+              <div className="loading">
+                Loading sessions...
+              </div>
             )}
+
 
             {error && (
-              <p>
+              <div className="error-message">
                 Error: {error}
-              </p>
+              </div>
             )}
 
+
             {!loading && !error && (
-              <div>
+              <div className="session-list">
+
                 {sessions.length === 0 ? (
                   <p>
                     No exam sessions found.
                   </p>
                 ) : (
                   sessions.map((session) => (
-                    <div key={session.id}>
-                      <strong>
-                        {session.exam_name}
-                      </strong>
+                    <div
+                      className="session-item"
+                      key={session.id}
+                    >
 
-                      <p>
-                        Session ID: {session.id}
-                      </p>
+                      <div className="session-main">
+                        <strong>
+                          {session.exam_name}
+                        </strong>
 
-                      <p>
+                        <span>
+                          Session {session.id}
+                        </span>
+                      </div>
+
+                      <div className="session-meta">
                         Student ID: {session.student_id}
-                      </p>
+                      </div>
+
                     </div>
                   ))
                 )}
+
               </div>
             )}
+
           </div>
 
         </section>
 
       </main>
+
+
+      {/* Footer */}
+
+      <footer className="footer">
+        <span>
+          VectorVanguard
+        </span>
+
+        <span>
+          Offline • Private • Evidence-Grounded
+        </span>
+      </footer>
+
     </div>
   )
 }
