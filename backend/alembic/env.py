@@ -29,7 +29,7 @@ target_metadata = Base.metadata
 # This keeps the database password in .env rather than alembic.ini.
 config.set_main_option(
     "sqlalchemy.url",
-    settings.SQLALCHEMY_DATABASE_URI,
+    "postgresql+psycopg://postgres:postgres@localhost:5432/vectorvanguard_migration_test",
 )
 
 

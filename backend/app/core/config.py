@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     OLLAMA_LLM_MODEL: str = "llama3.1:8b"
     OLLAMA_EMBED_MODEL: str = "nomic-embed-text:latest"
     OLLAMA_VISION_MODEL: str = "gemma3:4b"
+
+    # Tesseract OCR
+    TESSERACT_PATH: str | None = None
 
     # Load variables from backend/.env
     model_config = SettingsConfigDict(

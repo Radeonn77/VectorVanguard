@@ -1,5 +1,7 @@
-import base64
+﻿import base64
 import json
+import os
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -13,13 +15,24 @@ from app.core.config import settings
 from app.services.evidence_store import store_evidence
 
 
-TESSERACT_PATH = (
-    r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-)
+# ==============================================================================
+# Tesseract OCR configuration
+# ==============================================================================
+# Prefer an explicitly configured TESSERACT_PATH.
+# Otherwise, automatically find Tesseract from the system PATH.
+TESSERACT_PATH = os.getenv(
+    "TESSERACT_PATH"
+) or shutil.which("tesseract")
 
-pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+if TESSERACT_PATH:
+    pytesseract.pytesseract.tesseract_cmd = (
+        TESSERACT_PATH
+    )
 
 
+# ==============================================================================
+# Vision model
+# ==============================================================================
 vision_llm = ChatOllama(
     model=settings.OLLAMA_VISION_MODEL,
     base_url=settings.OLLAMA_BASE_URL,
@@ -27,6 +40,9 @@ vision_llm = ChatOllama(
 )
 
 
+# ==============================================================================
+# Image preprocessing
+# ==============================================================================
 def preprocess_image(image_path: str) -> object:
     image = cv2.imread(image_path)
 
@@ -50,6 +66,9 @@ def preprocess_image(image_path: str) -> object:
     return thresholded
 
 
+# ==============================================================================
+# OCR extraction
+# ==============================================================================
 def extract_ocr(image_path: str) -> str:
     processed_image = preprocess_image(
         image_path
@@ -62,6 +81,9 @@ def extract_ocr(image_path: str) -> str:
     return text.strip()
 
 
+# ==============================================================================
+# Vision analysis
+# ==============================================================================
 def analyze_image(
     image_path: str,
 ) -> tuple[str, dict]:
@@ -206,6 +228,9 @@ Rules:
     )
 
 
+# ==============================================================================
+# Evidence ingestion
+# ==============================================================================
 def ingest_evidence(
     db: Session,
     session_id: int,

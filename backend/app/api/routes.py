@@ -11,9 +11,11 @@ from fastapi import (
     UploadFile,
 )
 from pydantic import BaseModel
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.core.database import get_db, engine
+from app.core.config import settings
 from app.models.exam_session import ExamSession
 from app.models.student import Student
 from app.services.agent import run_agent
@@ -51,6 +53,38 @@ class InvestigationRequest(BaseModel):
 
 class InvestigationResponse(BaseModel):
     answer: str
+
+
+@router.get("/health")
+def health_check():
+    """
+    Basic application health check.
+
+    Verifies that the API process is running and
+    that PostgreSQL is reachable.
+    """
+
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+
+        database_status = "ok"
+
+    except Exception:
+        database_status = "error"
+
+    overall_status = (
+        "ok"
+        if database_status == "ok"
+        else "degraded"
+    )
+
+    return {
+        "status": overall_status,
+        "application": settings.APP_NAME,
+        "environment": settings.ENVIRONMENT,
+        "database": database_status,
+    }
 
 
 @router.get("/students")
